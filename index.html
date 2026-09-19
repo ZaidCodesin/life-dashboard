@@ -1,139 +1,189 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Dashboard of Life — How Much Time Left</title>
+<title>Life Dashboard</title>
 <style>
+  :root {
+    --bg: #0b0d12; --surface: #12151d; --surface-2: #171b26;
+    --border: #232936; --text: #e6e9f0; --muted: #9aa1b5; --faint: #5d6579;
+    --accent: #d8f34e; --accent-ink: #141500; --radius: 14px;
+  }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; background:#0a0e1a; color:#e8ecf4; min-height:100vh; padding:24px 16px 60px; }
-  .wrap { max-width:900px; margin:0 auto; }
-  header { text-align:center; margin-bottom:28px; }
-  header h1 { font-size:clamp(28px,5vw,44px); font-weight:800; letter-spacing:-1px; background:linear-gradient(90deg,#7dd3fc,#a78bfa,#f472b6); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  header p { color:#8b93a7; margin-top:8px; font-size:15px; }
-  .card { background:linear-gradient(160deg,#141b30,#0f1528); border:1px solid #232c47; border-radius:18px; padding:24px; margin-bottom:18px; box-shadow:0 10px 40px rgba(0,0,0,.4); }
-  .card h2 { font-size:15px; text-transform:uppercase; letter-spacing:2px; color:#8b93a7; margin-bottom:6px; }
-  .card .big { font-size:clamp(20px,4vw,30px); font-weight:700; line-height:1.5; font-variant-numeric:tabular-nums; }
-  .card .sub { color:#8b93a7; font-size:14px; margin-top:10px; line-height:1.6; }
-  .accent-green .big { color:#4ade80; }
-  .accent-amber .big { color:#fbbf24; }
-  .accent-rose .big { color:#fb7185; }
-  .bar { height:14px; background:#1e2642; border-radius:99px; margin-top:16px; overflow:hidden; }
-  .bar > div { height:100%; border-radius:99px; transition:width .5s; }
-  .bar-labels { display:flex; justify-content:space-between; font-size:13px; color:#8b93a7; margin-top:8px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px; }
-  .stat { background:#0c1226; border:1px solid #232c47; border-radius:12px; padding:14px; text-align:center; }
-  .stat b { display:block; font-size:22px; font-variant-numeric:tabular-nums; }
-  .stat span { font-size:12px; color:#8b93a7; text-transform:uppercase; letter-spacing:1px; }
-  .urgent { border-color:#f59e0b55; background:linear-gradient(160deg,#1c1607,#0f1528); }
-  footer { text-align:center; color:#525a73; font-size:13px; margin-top:30px; line-height:1.8; }
-  .live-dot { display:inline-block; width:9px; height:9px; background:#4ade80; border-radius:50%; margin-right:8px; animation:pulse 1.5s infinite; vertical-align:middle; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-  .tabs { display:flex; gap:10px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
-  .tab-btn { background:#0c1226; border:1px solid #232c47; color:#8b93a7; padding:12px 26px; border-radius:99px; font-size:15px; font-weight:700; cursor:pointer; transition:all .2s; }
-  .tab-btn.active { background:linear-gradient(90deg,#7dd3fc,#a78bfa); color:#0a0e1a; border-color:transparent; box-shadow:0 4px 20px rgba(125,211,252,.3); }
-  .tab-btn:hover { transform:translateY(-1px); }
-  .tab-page { display:none; }
-  .tab-page.active { display:block; animation:fadeIn .3s; }
-  @keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
-  .open-btn { display:block; text-align:center; margin-top:14px; background:linear-gradient(90deg,#4ade80,#22d3ee); color:#0a0e1a; font-weight:800; font-size:16px; padding:15px; border-radius:14px; text-decoration:none; }
-  .mini-link { display:inline-block; margin-top:8px; color:#7dd3fc; font-weight:700; text-decoration:none; font-size:14px; }
-  #tab-coding .card { padding:28px; }
-  .counter-num { font-size:clamp(48px,10vw,84px); font-weight:800; text-align:center; font-variant-numeric:tabular-nums; background:linear-gradient(90deg,#4ade80,#22d3ee); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1.1; }
-  .counter-goal { text-align:center; color:#8b93a7; font-size:14px; margin-top:4px; }
-  .counter-btns { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
-  .cbtn { border:none; border-radius:14px; padding:14px 22px; font-size:16px; font-weight:800; cursor:pointer; }
-  .cbtn-plus { background:linear-gradient(90deg,#4ade80,#22d3ee); color:#0a0e1a; font-size:18px; }
-  .cbtn-minus { background:#1e2642; color:#e8ecf4; border:1px solid #232c47; }
-  .cbtn-reset { background:transparent; color:#8b93a7; border:1px solid #232c47; }
-  .streak-row { display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
-  .streak-pill { background:#0c1226; border:1px solid #232c47; border-radius:99px; padding:8px 18px; font-size:14px; font-weight:700; }
-  .proj-box { background:#0c1226; border:1px solid #232c47; border-radius:12px; padding:14px 16px; margin-top:16px; font-size:14px; line-height:1.9; color:#c6cddf; }
-  .proj-box b { color:#4ade80; }
+  body { font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1060px; margin:0 auto; padding:28px 20px 70px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:6px 2px 20px; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .mark { width:34px; height:34px; border-radius:10px; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:17px; }
+  .brand h1 { font-size:17px; font-weight:650; letter-spacing:-.01em; }
+  .brand small { display:block; font-size:12px; color:var(--muted); font-weight:400; }
+  .live { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#3ddc84; animation:pulse 2s infinite; }
+  @keyframes pulse { 50% { opacity:.35; } }
+  nav { display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:22px; position:sticky; top:10px; z-index:5; }
+  nav button { flex:1; border:0; background:transparent; color:var(--muted); font:inherit; font-size:13.5px; font-weight:600; padding:10px 8px; border-radius:9px; cursor:pointer; }
+  nav button.active { background:var(--surface-2); color:var(--text); box-shadow:inset 0 0 0 1px var(--border); }
+  .page { display:none; } .page.active { display:block; animation:fade .25s ease; }
+  @keyframes fade { from { opacity:0; transform:translateY(6px); } }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px) { .grid2 { grid-template-columns:1fr; } }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:14px; }
+  .card.full { grid-column:1 / -1; }
+  .label { font-size:11.5px; font-weight:650; letter-spacing:.09em; text-transform:uppercase; color:var(--faint); margin-bottom:8px; }
+  .hero-num { font-size:38px; font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums; line-height:1.2; }
+  .hero-num small { font-size:15px; color:var(--muted); font-weight:500; }
+  .desc { color:var(--muted); font-size:13.5px; margin-top:8px; }
+  .desc b { color:var(--text); }
+  .meter { height:6px; background:#1e2331; border-radius:99px; margin-top:14px; overflow:hidden; }
+  .meter > div { height:100%; border-radius:99px; background:var(--accent); transition:width .4s; }
+  .meter.dim > div { background:#3a4157; }
+  .meter-row { display:flex; justify-content:space-between; font-size:12.5px; color:var(--faint); margin-top:8px; font-variant-numeric:tabular-nums; }
+  .stat4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px; }
+  @media (max-width:560px) { .stat4 { grid-template-columns:repeat(2,1fr); } }
+  .stat4 div { background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:10px 8px; text-align:center; }
+  .stat4 b { display:block; font-size:16px; font-variant-numeric:tabular-nums; }
+  .stat4 span { font-size:11px; color:var(--faint); }
+  .flag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:3px 9px; border-radius:99px; margin-bottom:10px; background:rgba(216,243,78,.12); color:var(--accent); }
+  .warn-card { border-color:rgba(216,243,78,.25); }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:700; font-size:14px; padding:12px 20px; border-radius:10px; text-decoration:none; border:0; cursor:pointer; }
+  .btn.ghost { background:transparent; color:var(--text); box-shadow:inset 0 0 0 1px var(--border); }
+  .btn-row { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .profile { display:flex; gap:16px; align-items:center; }
+  .avatar { width:52px; height:52px; border-radius:14px; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; flex:none; }
+  .profile h3 { font-size:17px; }
+  .profile p { font-size:13px; color:var(--muted); }
+  .plat { display:flex; align-items:center; gap:14px; padding:13px 4px; border-top:1px solid var(--border); text-decoration:none; color:inherit; }
+  .plat:first-of-type { border-top:0; }
+  .plat-ic { width:38px; height:38px; border-radius:10px; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--muted); flex:none; }
+  .plat-name { font-weight:650; font-size:14.5px; }
+  .plat-sub { font-size:12.5px; color:var(--faint); }
+  .plat-go { margin-left:auto; color:var(--faint); font-size:13px; flex:none; }
+  .speed-group { margin-bottom:14px; }
+  .speed-group > h3 { font-size:13px; font-weight:650; color:var(--muted); margin:0 2px 8px; }
+  .speed-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; }
+  .tool { display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:15px 16px; text-decoration:none; color:inherit; }
+  .tool:hover { border-color:#3a4358; }
+  .tool b { font-size:14.5px; display:block; }
+  .tool span { font-size:12.5px; color:var(--faint); display:block; margin-top:2px; line-height:1.5; }
+  .tool .tag { display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); background:rgba(216,243,78,.09); border-radius:6px; padding:2px 7px; margin-bottom:8px; }
+  .big-count { font-size:64px; font-weight:700; letter-spacing:-.04em; text-align:center; font-variant-numeric:tabular-nums; line-height:1; }
+  .big-count small { font-size:20px; color:var(--faint); font-weight:500; }
+  .goal-line { text-align:center; color:var(--muted); font-size:13.5px; margin-top:6px; }
+  footer { text-align:center; color:var(--faint); font-size:12.5px; margin-top:26px; }
+/*MORE-CSS*/
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Dashboard of Life</h1>
-    <p><span class="live-dot"></span><span id="clock">live</span> &nbsp;•&nbsp; Born 26 May 2006</p>
-  </header>
-
-  <div class="tab-btn-row tabs"><button class="tab-btn active" onclick="showTab('life',this)">⏳ Life</button><button class="tab-btn" onclick="showTab('coding',this)">💻 Coding</button></div>
-<div id="tab-life" class="tab-page active">
-  <div class="card accent-green">
-    <h2>🌍 Time on Earth — you are alive for</h2>
-    <div class="big" id="alive">—</div>
-    <div class="grid">
-      <div class="stat"><b id="s-days">—</b><span>total days</span></div>
-      <div class="stat"><b id="s-hours">—</b><span>total hours</span></div>
-      <div class="stat"><b id="s-mins">—</b><span>total minutes</span></div>
-      <div class="stat"><b id="s-secs">—</b><span>total seconds</span></div>
+  <div class="topbar">
+    <div class="brand"><div class="mark">L</div>
+      <h1>Life Dashboard<small>Born 26 May 2006 · Freedom by 25 · Life till 60</small></h1>
+    </div>
+    <div class="live"><span class="dot"></span><span id="clock">—</span></div>
+  </div>
+  <nav>
+    <button class="active" onclick="showTab('life',this)">Life</button>
+    <button onclick="showTab('coding',this)">Coding</button>
+    <button onclick="showTab('speed',this)">Speed</button>
+  </nav>
+  <div id="tab-life" class="page active">
+    <div class="grid2">
+      <div class="card full">
+        <div class="label">Time on earth</div>
+        <div class="hero-num" id="alive">—</div>
+        <div class="stat4">
+          <div><b id="s-days">—</b><span>days</span></div>
+          <div><b id="s-hours">—</b><span>hours</span></div>
+          <div><b id="s-mins">—</b><span>minutes</span></div>
+          <div><b id="s-secs">—</b><span>seconds</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Till 60 · 26 May 2066</div>
+        <div class="hero-num" style="font-size:28px;" id="left60">—</div>
+        <div class="meter dim"><div id="bar60"></div></div>
+        <div class="meter-row"><span id="pct-used">—</span><span id="pct-left">—</span></div>
+        <p class="desc" id="left60days">—</p>
+      </div>
+      <div class="card warn-card">
+        <span class="flag">Priority · freedom by 25</span>
+        <div class="label">Time left · 26 May 2031</div>
+        <div class="hero-num" style="font-size:28px;" id="left25">—</div>
+        <div class="meter"><div id="bar25"></div></div>
+        <div class="meter-row"><span id="pct25-used">—</span><span id="pct25-left">—</span></div>
+        <p class="desc" id="left25days">—</p>
+      </div>
     </div>
   </div>
-
-  <div class="card accent-rose">
-    <h2>⏳ If you live till 60 (26 May 2066) — time left</h2>
-    <div class="big" id="left60">—</div>
-    <div class="bar"><div id="bar60" style="background:linear-gradient(90deg,#fb7185,#f472b6); width:0%"></div></div>
-    <div class="bar-labels"><span id="pct-used">—</span><span id="pct-left">—</span></div>
-    <p class="sub" id="left60days">—</p>
-  </div>
-
-  <div class="card urgent accent-amber">
-    <h2>🔥 Financially free by 25 (26 May 2031) — time left</h2>
-    <div class="big" id="left25">—</div>
-    <div class="bar"><div id="bar25" style="background:linear-gradient(90deg,#fbbf24,#f97316); width:0%"></div></div>
-    <div class="bar-labels"><span id="pct25-used">—</span><span id="pct25-left">—</span></div>
-    <p class="sub" id="left25days">—</p>
-  </div>
-
-  </div>
-
-  <div id="tab-coding" class="tab-page">
-    <div class="card accent-green" style="text-align:center; padding:32px 24px;">
-      <div style="width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#7dd3fc,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 14px;">&#128187;</div>
-      <div class="big" style="font-size:28px;">zaid.learning</div>
-      <p class="sub">Codolio-connected coder profile - DSA, contests and platform stats in one place.</p>
-      <a class="open-btn" style="max-width:420px;margin:18px auto 0;" href="https://codolio.com/profile/zaid.learning" target="_blank" rel="noopener">Open my Codolio profile</a>
-      <p class="sub" style="font-size:12px; margin-top:10px;">Codolio needs login so it opens as a full page - it blocks embedding inside other sites.</p>
+  <div id="tab-coding" class="page">
+    <div class="card">
+      <div class="profile"><div class="avatar">Z</div>
+        <div><h3>zaid.learning</h3><p>Codolio profile — DSA, contests &amp; platform stats. Opens as a full page (Codolio requires login).</p></div>
+      </div>
+      <div class="btn-row"><a class="btn" href="https://codolio.com/profile/zaid.learning" target="_blank" rel="noopener">Open Codolio profile →</a></div>
     </div>
     <div class="card">
-      <h2>My coding platforms</h2>
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
-        <div class="stat"><b>LeetCode</b><span>practice and contests</span><br/><a class="mini-link" href="https://leetcode.com/" target="_blank" rel="noopener">open</a></div>
-        <div class="stat"><b>CodeChef</b><span>contests and rating</span><br/><a class="mini-link" href="https://www.codechef.com/" target="_blank" rel="noopener">open</a></div>
-        <div class="stat"><b>Codeforces</b><span>rated contests</span><br/><a class="mini-link" href="https://codeforces.com/" target="_blank" rel="noopener">open</a></div>
-        <div class="stat"><b>HackerRank</b><span>skills and badges</span><br/><a class="mini-link" href="https://www.hackerrank.com/" target="_blank" rel="noopener">open</a></div>
+      <div class="label">Daily DSA · goal 10/day</div>
+      <div class="big-count"><span id="dsa-count">0</span><small> / 10</small></div>
+      <p class="goal-line" id="dsa-msg">Tap +1 for every problem you solve.</p>
+      <div class="meter"><div id="dsa-bar"></div></div>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="btn" onclick="dsaAdd(1)">+1 Solved</button>
+        <button class="btn ghost" onclick="dsaAdd(-1)">Undo</button>
+        <button class="btn ghost" onclick="dsaReset()">Reset</button>
       </div>
-      <p class="sub">Tell me your exact usernames and I will link each card directly to your profile.</p>
+      <div class="meter-row" style="justify-content:center; gap:22px;">
+        <span>Streak <b style="color:var(--text)" id="dsa-streak">0</b>d</span>
+        <span>Total <b style="color:var(--text)" id="dsa-total">0</b></span>
+        <span id="dsa-date">—</span>
+      </div>
+      <p class="desc" id="dsa-projection">—</p>
     </div>
-    <div class="card urgent">
-      <h2>Daily DSA counter — goal 10/day</h2>
-      <div class="counter-num"><span id="dsa-count">0</span><span style="font-size:.45em; color:#8b93a7;"> / 10</span></div>
-      <div class="counter-goal" id="dsa-msg">Tap +1 for every problem you solve today</div>
-      <div class="bar"><div id="dsa-bar" style="background:linear-gradient(90deg,#4ade80,#22d3ee); width:0%"></div></div>
-      <div class="counter-btns">
-        <button class="cbtn cbtn-plus" onclick="dsaAdd(1)">+1 Solved</button>
-        <button class="cbtn cbtn-minus" onclick="dsaAdd(-1)">Undo</button>
-        <button class="cbtn cbtn-reset" onclick="dsaReset()">Reset</button>
-      </div>
-      <div class="streak-row">
-        <div class="streak-pill">Streak: <span id="dsa-streak">0</span> days</div>
-        <div class="streak-pill">Total solved: <span id="dsa-total">0</span></div>
-        <div class="streak-pill">Today: <span id="dsa-date">—</span></div>
-      </div>
-      <div class="proj-box" id="dsa-projection">Solve and watch your projection…</div>
-      <p class="sub">Saved on this device only — streak counts days you hit 10/10.</p>
-      <a class="open-btn" href="https://codolio.com/profile/zaid.learning" target="_blank" rel="noopener">Solve on Codolio</a>
+    <div class="card">
+      <div class="label">Platforms</div>
+      <a class="plat" href="https://leetcode.com/" target="_blank" rel="noopener"><div class="plat-ic">Lc</div><div><div class="plat-name">LeetCode</div><div class="plat-sub">Daily practice &amp; contests</div></div><div class="plat-go">Open →</div></a>
+      <a class="plat" href="https://www.codechef.com/" target="_blank" rel="noopener"><div class="plat-ic">Cc</div><div><div class="plat-name">CodeChef</div><div class="plat-sub">Rated contests</div></div><div class="plat-go">Open →</div></a>
+      <a class="plat" href="https://codeforces.com/" target="_blank" rel="noopener"><div class="plat-ic">Cf</div><div><div class="plat-name">Codeforces</div><div class="plat-sub">Competitive rating</div></div><div class="plat-go">Open →</div></a>
+      <a class="plat" href="https://www.hackerrank.com/" target="_blank" rel="noopener"><div class="plat-ic">Hr</div><div><div class="plat-name">HackerRank</div><div class="plat-sub">Skills &amp; badges</div></div><div class="plat-go">Open →</div></a>
     </div>
   </div>
-
-  <footer>
-    Every second counts. Make it matter. 💪<br/>
-    Dashboard of Life • Born 26·05·2006 • Targets: freedom by 25, life till 60
-  </footer>
+  <div id="tab-speed" class="page">
+    <div class="card">
+      <div class="label">Speed training · typing, tools, maths</div>
+      <div class="hero-num" style="font-size:24px;">Type faster. Compute faster.</div>
+      <p class="desc">One tab for every speed skill — pick a drill and go.</p>
+    </div>
+    <div class="speed-group">
+      <h3>Typing — core speed</h3>
+      <div class="speed-grid">
+        <a class="tool" href="https://monkeytype.com/" target="_blank" rel="noopener"><span class="tag">Daily driver</span><b>Monkeytype</b><span>Minimalist typing tests. 30s / 60s English daily to push raw WPM.</span></a>
+        <a class="tool" href="https://www.typingclub.com/" target="_blank" rel="noopener"><span class="tag">Lessons</span><b>TypingClub</b><span>Structured touch-typing course. Fix fingers &amp; accuracy first.</span></a>
+        <a class="tool" href="https://www.typingtom.com/programming/typing-test/30s" target="_blank" rel="noopener"><span class="tag">Code typing</span><b>TypingTom · Code 30s</b><span>Brackets &amp; symbols — directly transfers to coding speed.</span></a>
+      </div>
+    </div>
+    <div class="speed-group">
+      <h3>Workplace tools — Excel, drills, mouse</h3>
+      <div class="speed-grid">
+        <a class="tool" href="https://www.shortcutfoo.com/app/dojos/excel-win" target="_blank" rel="noopener"><span class="tag">Excel</span><b>ShortcutFoo · Excel Dojo</b><span>Drill Excel shortcuts to muscle memory. Huge office edge.</span></a>
+        <a class="tool" href="https://speeedy.pages.dev/#/app" target="_blank" rel="noopener"><span class="tag">Drills</span><b>Speeedy</b><span>General speed drills — quick reps between sessions.</span></a>
+        <a class="tool" href="https://mouseaccuracy.com/results" target="_blank" rel="noopener"><span class="tag">Mouse</span><b>Mouse Accuracy</b><span>Pointer precision test. Check score, then beat it.</span></a>
+      </div>
+    </div>
+    <div class="speed-group">
+      <h3>Maths &amp; aptitude — placement edge</h3>
+      <div class="speed-grid">
+        <a class="tool" href="https://speedmath.in/" target="_blank" rel="noopener"><span class="tag">Mental maths</span><b>SpeedMath</b><span>Mental arithmetic fluency for aptitude rounds.</span></a>
+        <a class="tool" href="https://unstop.com/" target="_blank" rel="noopener"><span class="tag">Compete</span><b>Unstop</b><span>Hackathons, quizzes &amp; hiring challenges.</span></a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">Routine · 20 min/day</div>
+      <p class="desc"><b>1.</b> Monkeytype 30s × 5 → <b>2.</b> TypingTom code 30s × 3 → <b>3.</b> SpeedMath 5 min → <b>4.</b> One Excel dojo.</p>
+    </div>
+  </div>
+<!--MORE-PAGES-->
+  <footer>Life Dashboard · Born 26 May 2006 · Freedom by 25 · Life till 60</footer>
 </div>
 <script>
 const BIRTH = new Date(2006, 4, 26, 0, 0, 0);
@@ -149,42 +199,36 @@ function breakdown(ms) {
 }
 function tick() {
   const now = new Date();
-  document.getElementById("clock").textContent = "LIVE • " + now.toLocaleString("en-IN", { dateStyle:"medium", timeStyle:"medium" });
-  // 1. Alive
-  const aliveMs = now - BIRTH;
-  const a = breakdown(aliveMs);
-  const yrs0 = now.getFullYear() - 2006 - ((now.getMonth() < 4 || (now.getMonth() === 4 && now.getDate() < 26)) ? 1 : 0);
-  const lastBday0 = new Date(now.getFullYear() - (((now.getMonth() > 4) || (now.getMonth() === 4 && now.getDate() >= 26)) ? 0 : 1), 4, 26);
-  const daysSinceBday0 = Math.floor((now - lastBday0) / 864e5);
-  document.getElementById("alive").textContent = yrs0 + " yrs • " + daysSinceBday0 + " days • " + a.h + "h : " + a.m + "m : " + a.sec + "s";
-  document.getElementById("s-days").textContent = fmt(aliveMs / 864e5);
-  document.getElementById("s-hours").textContent = fmt(aliveMs / 36e5);
-  document.getElementById("s-mins").textContent = fmt(aliveMs / 6e4);
-  document.getElementById("s-secs").textContent = fmt(aliveMs / 1e3);
-  // 2. Till 60
-  const left60 = AGE60 - now;
-  const b = breakdown(left60);
-  document.getElementById("left60").textContent = b.d.toLocaleString("en-IN") + " days • " + b.h + "h : " + b.m + "m : " + b.sec + "s";
-  const total60 = AGE60 - BIRTH;
-  const usedPct = ((aliveMs / total60) * 100);
-  document.getElementById("bar60").style.width = usedPct.toFixed(2) + "%";
-  document.getElementById("pct-used").textContent = "Lived " + usedPct.toFixed(1) + "%";
-  document.getElementById("pct-left").textContent = (100 - usedPct).toFixed(1) + "% left";
-  document.getElementById("left60days").textContent = "That's " + fmt(left60/31557600000) + " years, or " + fmt(left60/6048e5) + " weeks, or " + fmt(left60/36e5) + " hours still in your hands.";
-  // 3. Till 25
+  const el = (id) => document.getElementById(id);
+  if (el("clock")) el("clock").textContent = now.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) + " · " + now.toLocaleTimeString("en-IN");
+  const aliveMs = now - BIRTH, a = breakdown(aliveMs);
+  let yrs = now.getFullYear() - 2006;
+  const hadBday = (now.getMonth() > 4) || (now.getMonth() === 4 && now.getDate() >= 26);
+  if (!hadBday) yrs -= 1;
+  const lastBday = new Date(now.getFullYear() - (hadBday ? 0 : 1), 4, 26);
+  const dsb = Math.floor((now - lastBday) / 864e5);
+  if (el("alive")) el("alive").innerHTML = yrs + " <small>yrs</small> · " + dsb + " <small>days</small> · " + a.h + "<small>h</small> " + a.m + "<small>m</small> " + a.sec + "<small>s</small>";
+  if (el("s-days")) el("s-days").textContent = fmt(aliveMs / 864e5);
+  if (el("s-hours")) el("s-hours").textContent = fmt(aliveMs / 36e5);
+  if (el("s-mins")) el("s-mins").textContent = fmt(aliveMs / 6e4);
+  if (el("s-secs")) el("s-secs").textContent = fmt(aliveMs / 1e3);
+  const left60 = AGE60 - now, b = breakdown(left60);
+  if (el("left60")) el("left60").innerHTML = b.d.toLocaleString("en-IN") + " <small>days</small> · " + b.h + "<small>h</small> " + b.m + "<small>m</small> " + b.sec + "<small>s</small>";
+  const usedPct = (aliveMs / (AGE60 - BIRTH)) * 100;
+  if (el("bar60")) el("bar60").style.width = usedPct.toFixed(2) + "%";
+  if (el("pct-used")) el("pct-used").textContent = "Lived " + usedPct.toFixed(1) + "%";
+  if (el("pct-left")) el("pct-left").textContent = (100 - usedPct).toFixed(1) + "% left";
+  if (el("left60days")) el("left60days").innerHTML = "<b>" + fmt(left60/31557600000) + " years</b> · " + fmt(left60/6048e5) + " weeks · " + fmt(left60/36e5) + " hours in hand.";
   const left25 = AGE25 - now;
-  if (left25 <= 0) {
-    document.getElementById("left25").textContent = "🎉 Deadline reached — hope you're free!";
-  } else {
-    const c = breakdown(left25);
-    const y25 = Math.floor(c.d / 365);
-    document.getElementById("left25").textContent = y25 + " yrs • " + (c.d % 365).toLocaleString("en-IN") + " days • " + c.h + "h : " + c.m + "m : " + c.sec + "s";
-    const total25 = AGE25 - BIRTH;
-    const used25 = (aliveMs / total25) * 100;
-    document.getElementById("bar25").style.width = used25.toFixed(2) + "%";
-    document.getElementById("pct25-used").textContent = "Used " + used25.toFixed(1) + "% of your runway";
-    document.getElementById("pct25-left").textContent = (100 - used25).toFixed(1) + "% left";
-    document.getElementById("left25days").textContent = "Only " + fmt(left25/864e5) + " days (" + fmt(left25/36e5) + " hours) to become financially free. Every day = " + (100/(left25/864e5)).toFixed(3) + "% of remaining time.";
+  if (left25 <= 0) { if (el("left25")) el("left25").textContent = "Deadline reached."; }
+  else {
+    const c = breakdown(left25), y25 = Math.floor(c.d / 365);
+    if (el("left25")) el("left25").innerHTML = y25 + " <small>yrs</small> · " + (c.d % 365).toLocaleString("en-IN") + " <small>days</small> · " + c.h + "<small>h</small> " + c.m + "<small>m</small> " + c.sec + "<small>s</small>";
+    const used25 = (aliveMs / (AGE25 - BIRTH)) * 100;
+    if (el("bar25")) el("bar25").style.width = used25.toFixed(2) + "%";
+    if (el("pct25-used")) el("pct25-used").textContent = "Used " + used25.toFixed(1) + "%";
+    if (el("pct25-left")) el("pct25-left").textContent = (100 - used25).toFixed(1) + "% left";
+    if (el("left25days")) el("left25days").innerHTML = "<b>" + fmt(left25/864e5) + " days</b> (" + fmt(left25/36e5) + " hrs). Each day = " + (100/(left25/864e5)).toFixed(3) + "% of remaining time.";
   }
 }
 function dsaToday() { return new Date().toISOString().slice(0, 10); }
@@ -204,25 +248,24 @@ function dsaRender() {
     if ((days[key] || 0) >= 10) { streak++; d.setDate(d.getDate() - 1); } else { break; }
   }
   document.getElementById("dsa-streak").textContent = streak;
-  var msg = document.getElementById("dsa-msg");
-  var proj = document.getElementById("dsa-projection");
+  var msg = document.getElementById("dsa-msg"), proj = document.getElementById("dsa-projection");
   if (c >= 10) {
-    msg.textContent = "10/10 DONE! Beast mode. Rest or go bonus!";
-    proj.innerHTML = "At <b>10/day</b> = <b>300</b>/month = <b>3,650</b>/year. Total so far: <b>" + total.toLocaleString("en-IN") + "</b>. Streak: <b>" + streak + " days</b>.";
+    msg.textContent = "10/10 done. Rest or go bonus.";
+    proj.innerHTML = "At <b>10/day</b> = <b>300</b>/month = <b>3,650</b>/year. Total: <b>" + total.toLocaleString("en-IN") + "</b> · Streak <b>" + streak + "d</b>.";
   } else {
-    msg.textContent = (10 - c) + " more to hit today's 10 — you got this";
-    proj.innerHTML = "If you solve <b>10 daily</b> = <b>300</b>/month = <b>3,650</b>/year.<br/>Right now today: <b>" + c + "/10</b> (" + Math.round((c / 10) * 100) + "%). Total all-time: <b>" + total.toLocaleString("en-IN") + "</b>. At today's pace (" + c + "/day) = <b>" + (c * 365).toLocaleString("en-IN") + "</b>/year.";
+    msg.textContent = (10 - c) + " more to hit today's 10.";
+    proj.innerHTML = "10 daily = <b>300</b>/mo = <b>3,650</b>/yr. Today <b>" + c + "/10</b> (" + Math.round((c/10)*100) + "%). Total <b>" + total.toLocaleString("en-IN") + "</b>.";
   }
 }
 function dsaAdd(n) { var days = dsaLoad(); var t = dsaToday(); days[t] = Math.max(0, Math.min(99, (days[t] || 0) + n)); dsaSave(days); dsaRender(); }
 function dsaReset() { var days = dsaLoad(); days[dsaToday()] = 0; dsaSave(days); dsaRender(); }
 try { dsaRender(); } catch (e) {}
 function showTab(name, btn) {
-  document.getElementById("tab-life").classList.toggle("active", name === "life");
-  document.getElementById("tab-coding").classList.toggle("active", name === "coding");
-  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   if (btn) btn.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0 });
 }
 tick(); setInterval(tick, 1000);
 </script>
