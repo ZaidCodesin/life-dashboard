@@ -250,6 +250,7 @@ function dsaRender() {
   }
   document.getElementById("dsa-streak").textContent = streak;
   var msg = document.getElementById("dsa-msg"), proj = document.getElementById("dsa-projection");
+  var paceYear = c * 365, paceMonth = c * 30;
   if (c >= 10) {
     msg.textContent = "10/10 done. Rest or go bonus.";
     var paceYear = c * 365, paceMonth = c * 30;
