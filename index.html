@@ -231,7 +231,8 @@ function tick() {
     if (el("left25days")) el("left25days").innerHTML = "<b>" + fmt(left25/864e5) + " days</b> (" + fmt(left25/36e5) + " hrs). Each day = " + (100/(left25/864e5)).toFixed(3) + "% of remaining time.";
   }
 }
-function dsaToday() { return new Date().toISOString().slice(0, 10); }
+function dsaToday() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function dsaKey(dt) { return dt.getFullYear() + "-" + String(dt.getMonth()+1).padStart(2,"0") + "-" + String(dt.getDate()).padStart(2,"0"); }
 function dsaLoad() { try { return JSON.parse(localStorage.getItem("dsa-counter") || "{}"); } catch (e) { return {}; } }
 function dsaSave(s) { localStorage.setItem("dsa-counter", JSON.stringify(s)); }
 function dsaRender() {
@@ -244,17 +245,18 @@ function dsaRender() {
   var streak = 0; var d = new Date();
   if ((days[t] || 0) < 10) { d.setDate(d.getDate() - 1); }
   for (var i = 0; i < 365; i++) {
-    var key = d.toISOString().slice(0, 10);
+    var key = dsaKey(d);
     if ((days[key] || 0) >= 10) { streak++; d.setDate(d.getDate() - 1); } else { break; }
   }
   document.getElementById("dsa-streak").textContent = streak;
   var msg = document.getElementById("dsa-msg"), proj = document.getElementById("dsa-projection");
   if (c >= 10) {
     msg.textContent = "10/10 done. Rest or go bonus.";
-    proj.innerHTML = "At <b>10/day</b> = <b>300</b>/month = <b>3,650</b>/year. Total: <b>" + total.toLocaleString("en-IN") + "</b> · Streak <b>" + streak + "d</b>.";
+    var paceYear = c * 365, paceMonth = c * 30;
+    proj.innerHTML = "Perfect 10/day = <b>300</b>/mo = <b>3,650</b>/yr. Your pace today <b>" + c + "/day</b> = <b>" + paceMonth.toLocaleString("en-IN") + "</b>/mo = <b>" + paceYear.toLocaleString("en-IN") + "</b>/yr. Total: <b>" + total.toLocaleString("en-IN") + "</b> · Streak <b>" + streak + "d</b>.";
   } else {
     msg.textContent = (10 - c) + " more to hit today's 10.";
-    proj.innerHTML = "10 daily = <b>300</b>/mo = <b>3,650</b>/yr. Today <b>" + c + "/10</b> (" + Math.round((c/10)*100) + "%). Total <b>" + total.toLocaleString("en-IN") + "</b>.";
+    proj.innerHTML = "Perfect 10/day = <b>300</b>/mo = <b>3,650</b>/yr.<br/>Your pace today <b>" + c + "/day</b> = <b>" + paceMonth.toLocaleString("en-IN") + "</b>/mo = <b>" + paceYear.toLocaleString("en-IN") + "</b>/yr. Today <b>" + c + "/10</b> (" + Math.round((c/10)*100) + "%). Total <b>" + total.toLocaleString("en-IN") + "</b>.";
   }
 }
 function dsaAdd(n) { var days = dsaLoad(); var t = dsaToday(); days[t] = Math.max(0, Math.min(99, (days[t] || 0) + n)); dsaSave(days); dsaRender(); }
