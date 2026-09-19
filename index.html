@@ -37,11 +37,20 @@
   .tab-page { display:none; }
   .tab-page.active { display:block; animation:fadeIn .3s; }
   @keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
-  .code-frame { width:100%; height:75vh; min-height:520px; border:1px solid #232c47; border-radius:18px; background:#0c1226; }
   .open-btn { display:block; text-align:center; margin-top:14px; background:linear-gradient(90deg,#4ade80,#22d3ee); color:#0a0e1a; font-weight:800; font-size:16px; padding:15px; border-radius:14px; text-decoration:none; }
-  .open-btn:hover { filter:brightness(1.1); }
   .mini-link { display:inline-block; margin-top:8px; color:#7dd3fc; font-weight:700; text-decoration:none; font-size:14px; }
   #tab-coding .card { padding:28px; }
+  .counter-num { font-size:clamp(48px,10vw,84px); font-weight:800; text-align:center; font-variant-numeric:tabular-nums; background:linear-gradient(90deg,#4ade80,#22d3ee); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1.1; }
+  .counter-goal { text-align:center; color:#8b93a7; font-size:14px; margin-top:4px; }
+  .counter-btns { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
+  .cbtn { border:none; border-radius:14px; padding:14px 22px; font-size:16px; font-weight:800; cursor:pointer; }
+  .cbtn-plus { background:linear-gradient(90deg,#4ade80,#22d3ee); color:#0a0e1a; font-size:18px; }
+  .cbtn-minus { background:#1e2642; color:#e8ecf4; border:1px solid #232c47; }
+  .cbtn-reset { background:transparent; color:#8b93a7; border:1px solid #232c47; }
+  .streak-row { display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  .streak-pill { background:#0c1226; border:1px solid #232c47; border-radius:99px; padding:8px 18px; font-size:14px; font-weight:700; }
+  .proj-box { background:#0c1226; border:1px solid #232c47; border-radius:12px; padding:14px 16px; margin-top:16px; font-size:14px; line-height:1.9; color:#c6cddf; }
+  .proj-box b { color:#4ade80; }
 </style>
 </head>
 <body>
@@ -101,9 +110,22 @@
       <p class="sub">Tell me your exact usernames and I will link each card directly to your profile.</p>
     </div>
     <div class="card urgent">
-      <h2>Today mission</h2>
-      <div class="big" style="font-size:20px;">Solve at least 2 DSA problems today.</div>
-      <p class="sub">Open Codolio, solve, come back. Every problem = more runway to freedom by 25.</p>
+      <h2>Daily DSA counter — goal 10/day</h2>
+      <div class="counter-num"><span id="dsa-count">0</span><span style="font-size:.45em; color:#8b93a7;"> / 10</span></div>
+      <div class="counter-goal" id="dsa-msg">Tap +1 for every problem you solve today</div>
+      <div class="bar"><div id="dsa-bar" style="background:linear-gradient(90deg,#4ade80,#22d3ee); width:0%"></div></div>
+      <div class="counter-btns">
+        <button class="cbtn cbtn-plus" onclick="dsaAdd(1)">+1 Solved</button>
+        <button class="cbtn cbtn-minus" onclick="dsaAdd(-1)">Undo</button>
+        <button class="cbtn cbtn-reset" onclick="dsaReset()">Reset</button>
+      </div>
+      <div class="streak-row">
+        <div class="streak-pill">Streak: <span id="dsa-streak">0</span> days</div>
+        <div class="streak-pill">Total solved: <span id="dsa-total">0</span></div>
+        <div class="streak-pill">Today: <span id="dsa-date">—</span></div>
+      </div>
+      <div class="proj-box" id="dsa-projection">Solve and watch your projection…</div>
+      <p class="sub">Saved on this device only — streak counts days you hit 10/10.</p>
       <a class="open-btn" href="https://codolio.com/profile/zaid.learning" target="_blank" rel="noopener">Solve on Codolio</a>
     </div>
   </div>
@@ -165,6 +187,36 @@ function tick() {
     document.getElementById("left25days").textContent = "Only " + fmt(left25/864e5) + " days (" + fmt(left25/36e5) + " hours) to become financially free. Every day = " + (100/(left25/864e5)).toFixed(3) + "% of remaining time.";
   }
 }
+function dsaToday() { return new Date().toISOString().slice(0, 10); }
+function dsaLoad() { try { return JSON.parse(localStorage.getItem("dsa-counter") || "{}"); } catch (e) { return {}; } }
+function dsaSave(s) { localStorage.setItem("dsa-counter", JSON.stringify(s)); }
+function dsaRender() {
+  var days = dsaLoad(); var t = dsaToday(); var c = days[t] || 0;
+  var total = 0; for (var k in days) { total += days[k]; }
+  document.getElementById("dsa-count").textContent = c;
+  document.getElementById("dsa-bar").style.width = Math.min(100, (c / 10) * 100) + "%";
+  document.getElementById("dsa-total").textContent = total.toLocaleString("en-IN");
+  document.getElementById("dsa-date").textContent = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  var streak = 0; var d = new Date();
+  if ((days[t] || 0) < 10) { d.setDate(d.getDate() - 1); }
+  for (var i = 0; i < 365; i++) {
+    var key = d.toISOString().slice(0, 10);
+    if ((days[key] || 0) >= 10) { streak++; d.setDate(d.getDate() - 1); } else { break; }
+  }
+  document.getElementById("dsa-streak").textContent = streak;
+  var msg = document.getElementById("dsa-msg");
+  var proj = document.getElementById("dsa-projection");
+  if (c >= 10) {
+    msg.textContent = "10/10 DONE! Beast mode. Rest or go bonus!";
+    proj.innerHTML = "At <b>10/day</b> = <b>300</b>/month = <b>3,650</b>/year. Total so far: <b>" + total.toLocaleString("en-IN") + "</b>. Streak: <b>" + streak + " days</b>.";
+  } else {
+    msg.textContent = (10 - c) + " more to hit today's 10 — you got this";
+    proj.innerHTML = "If you solve <b>10 daily</b> = <b>300</b>/month = <b>3,650</b>/year.<br/>Right now today: <b>" + c + "/10</b> (" + Math.round((c / 10) * 100) + "%). Total all-time: <b>" + total.toLocaleString("en-IN") + "</b>. At today's pace (" + c + "/day) = <b>" + (c * 365).toLocaleString("en-IN") + "</b>/year.";
+  }
+}
+function dsaAdd(n) { var days = dsaLoad(); var t = dsaToday(); days[t] = Math.max(0, Math.min(99, (days[t] || 0) + n)); dsaSave(days); dsaRender(); }
+function dsaReset() { var days = dsaLoad(); days[dsaToday()] = 0; dsaSave(days); dsaRender(); }
+try { dsaRender(); } catch (e) {}
 function showTab(name, btn) {
   document.getElementById("tab-life").classList.toggle("active", name === "life");
   document.getElementById("tab-coding").classList.toggle("active", name === "coding");
