@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard of Life — How Much Time Left</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; background:#0a0e1a; color:#e8ecf4; min-height:100vh; padding:24px 16px 60px; }
+  .wrap { max-width:900px; margin:0 auto; }
+  header { text-align:center; margin-bottom:28px; }
+  header h1 { font-size:clamp(28px,5vw,44px); font-weight:800; letter-spacing:-1px; background:linear-gradient(90deg,#7dd3fc,#a78bfa,#f472b6); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  header p { color:#8b93a7; margin-top:8px; font-size:15px; }
+  .card { background:linear-gradient(160deg,#141b30,#0f1528); border:1px solid #232c47; border-radius:18px; padding:24px; margin-bottom:18px; box-shadow:0 10px 40px rgba(0,0,0,.4); }
+  .card h2 { font-size:15px; text-transform:uppercase; letter-spacing:2px; color:#8b93a7; margin-bottom:6px; }
+  .card .big { font-size:clamp(20px,4vw,30px); font-weight:700; line-height:1.5; font-variant-numeric:tabular-nums; }
+  .card .sub { color:#8b93a7; font-size:14px; margin-top:10px; line-height:1.6; }
+  .accent-green .big { color:#4ade80; }
+  .accent-amber .big { color:#fbbf24; }
+  .accent-rose .big { color:#fb7185; }
+  .bar { height:14px; background:#1e2642; border-radius:99px; margin-top:16px; overflow:hidden; }
+  .bar > div { height:100%; border-radius:99px; transition:width .5s; }
+  .bar-labels { display:flex; justify-content:space-between; font-size:13px; color:#8b93a7; margin-top:8px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px; }
+  .stat { background:#0c1226; border:1px solid #232c47; border-radius:12px; padding:14px; text-align:center; }
+  .stat b { display:block; font-size:22px; font-variant-numeric:tabular-nums; }
+  .stat span { font-size:12px; color:#8b93a7; text-transform:uppercase; letter-spacing:1px; }
+  .urgent { border-color:#f59e0b55; background:linear-gradient(160deg,#1c1607,#0f1528); }
+  footer { text-align:center; color:#525a73; font-size:13px; margin-top:30px; line-height:1.8; }
+  .live-dot { display:inline-block; width:9px; height:9px; background:#4ade80; border-radius:50%; margin-right:8px; animation:pulse 1.5s infinite; vertical-align:middle; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Dashboard of Life</h1>
+    <p><span class="live-dot"></span><span id="clock">live</span> &nbsp;•&nbsp; Born 26 May 2006</p>
+  </header>
+
+  <div class="card accent-green">
+    <h2>🌍 Time on Earth — you are alive for</h2>
+    <div class="big" id="alive">—</div>
+    <div class="grid">
+      <div class="stat"><b id="s-days">—</b><span>total days</span></div>
+      <div class="stat"><b id="s-hours">—</b><span>total hours</span></div>
+      <div class="stat"><b id="s-mins">—</b><span>total minutes</span></div>
+      <div class="stat"><b id="s-secs">—</b><span>total seconds</span></div>
+    </div>
+  </div>
+
+  <div class="card accent-rose">
+    <h2>⏳ If you live till 60 (26 May 2066) — time left</h2>
+    <div class="big" id="left60">—</div>
+    <div class="bar"><div id="bar60" style="background:linear-gradient(90deg,#fb7185,#f472b6); width:0%"></div></div>
+    <div class="bar-labels"><span id="pct-used">—</span><span id="pct-left">—</span></div>
+    <p class="sub" id="left60days">—</p>
+  </div>
+
+  <div class="card urgent accent-amber">
+    <h2>🔥 Financially free by 25 (26 May 2031) — time left</h2>
+    <div class="big" id="left25">—</div>
+    <div class="bar"><div id="bar25" style="background:linear-gradient(90deg,#fbbf24,#f97316); width:0%"></div></div>
+    <div class="bar-labels"><span id="pct25-used">—</span><span id="pct25-left">—</span></div>
+    <p class="sub" id="left25days">—</p>
+  </div>
+
+  <footer>
+    Every second counts. Make it matter. 💪<br/>
+    Dashboard of Life • Born 26·05·2006 • Targets: freedom by 25, life till 60
+  </footer>
+</div>
+<script>
+const BIRTH = new Date(2006, 4, 26, 0, 0, 0);
+const AGE60 = new Date(2066, 4, 26, 0, 0, 0);
+const AGE25 = new Date(2031, 4, 26, 0, 0, 0);
+const fmt = n => Math.floor(n).toLocaleString("en-IN");
+function breakdown(ms) {
+  let s = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(s / 86400); s %= 86400;
+  const h = Math.floor(s / 3600); s %= 3600;
+  const m = Math.floor(s / 60); const sec = s % 60;
+  return { d, h, m, sec };
+}
+function tick() {
+  const now = new Date();
+  document.getElementById("clock").textContent = "LIVE • " + now.toLocaleString("en-IN", { dateStyle:"medium", timeStyle:"medium" });
+  // 1. Alive
+  const aliveMs = now - BIRTH;
+  const a = breakdown(aliveMs);
+  const yrs0 = now.getFullYear() - 2006 - ((now.getMonth() < 4 || (now.getMonth() === 4 && now.getDate() < 26)) ? 1 : 0);
+  const lastBday0 = new Date(now.getFullYear() - (((now.getMonth() > 4) || (now.getMonth() === 4 && now.getDate() >= 26)) ? 0 : 1), 4, 26);
+  const daysSinceBday0 = Math.floor((now - lastBday0) / 864e5);
+  document.getElementById("alive").textContent = yrs0 + " yrs • " + daysSinceBday0 + " days • " + a.h + "h : " + a.m + "m : " + a.sec + "s";
+  document.getElementById("s-days").textContent = fmt(aliveMs / 864e5);
+  document.getElementById("s-hours").textContent = fmt(aliveMs / 36e5);
+  document.getElementById("s-mins").textContent = fmt(aliveMs / 6e4);
+  document.getElementById("s-secs").textContent = fmt(aliveMs / 1e3);
+  // 2. Till 60
+  const left60 = AGE60 - now;
+  const b = breakdown(left60);
+  document.getElementById("left60").textContent = b.d.toLocaleString("en-IN") + " days • " + b.h + "h : " + b.m + "m : " + b.sec + "s";
+  const total60 = AGE60 - BIRTH;
+  const usedPct = ((aliveMs / total60) * 100);
+  document.getElementById("bar60").style.width = usedPct.toFixed(2) + "%";
+  document.getElementById("pct-used").textContent = "Lived " + usedPct.toFixed(1) + "%";
+  document.getElementById("pct-left").textContent = (100 - usedPct).toFixed(1) + "% left";
+  document.getElementById("left60days").textContent = "That's " + fmt(left60/31557600000) + " years, or " + fmt(left60/6048e5) + " weeks, or " + fmt(left60/36e5) + " hours still in your hands.";
+  // 3. Till 25
+  const left25 = AGE25 - now;
+  if (left25 <= 0) {
+    document.getElementById("left25").textContent = "🎉 Deadline reached — hope you're free!";
+  } else {
+    const c = breakdown(left25);
+    const y25 = Math.floor(c.d / 365);
+    document.getElementById("left25").textContent = y25 + " yrs • " + (c.d % 365).toLocaleString("en-IN") + " days • " + c.h + "h : " + c.m + "m : " + c.sec + "s";
+    const total25 = AGE25 - BIRTH;
+    const used25 = (aliveMs / total25) * 100;
+    document.getElementById("bar25").style.width = used25.toFixed(2) + "%";
+    document.getElementById("pct25-used").textContent = "Used " + used25.toFixed(1) + "% of your runway";
+    document.getElementById("pct25-left").textContent = (100 - used25).toFixed(1) + "% left";
+    document.getElementById("left25days").textContent = "Only " + fmt(left25/864e5) + " days (" + fmt(left25/36e5) + " hours) to become financially free. Every day = " + (100/(left25/864e5)).toFixed(3) + "% of remaining time.";
+  }
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>
