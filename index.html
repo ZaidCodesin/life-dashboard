@@ -29,6 +29,17 @@
   footer { text-align:center; color:#525a73; font-size:13px; margin-top:30px; line-height:1.8; }
   .live-dot { display:inline-block; width:9px; height:9px; background:#4ade80; border-radius:50%; margin-right:8px; animation:pulse 1.5s infinite; vertical-align:middle; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .tabs { display:flex; gap:10px; justify-content:center; margin-bottom:22px; flex-wrap:wrap; }
+  .tab-btn { background:#0c1226; border:1px solid #232c47; color:#8b93a7; padding:12px 26px; border-radius:99px; font-size:15px; font-weight:700; cursor:pointer; transition:all .2s; }
+  .tab-btn.active { background:linear-gradient(90deg,#7dd3fc,#a78bfa); color:#0a0e1a; border-color:transparent; box-shadow:0 4px 20px rgba(125,211,252,.3); }
+  .tab-btn:hover { transform:translateY(-1px); }
+  .tab-page { display:none; }
+  .tab-page.active { display:block; animation:fadeIn .3s; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+  .code-frame { width:100%; height:75vh; min-height:520px; border:1px solid #232c47; border-radius:18px; background:#0c1226; }
+  .open-btn { display:block; text-align:center; margin-top:14px; background:linear-gradient(90deg,#4ade80,#22d3ee); color:#0a0e1a; font-weight:800; font-size:16px; padding:15px; border-radius:14px; text-decoration:none; }
+  .open-btn:hover { filter:brightness(1.1); }
 </style>
 </head>
 <body>
@@ -38,6 +49,8 @@
     <p><span class="live-dot"></span><span id="clock">live</span> &nbsp;•&nbsp; Born 26 May 2006</p>
   </header>
 
+  <div class="tab-btn-row tabs"><button class="tab-btn active" onclick="showTab('life',this)">⏳ Life</button><button class="tab-btn" onclick="showTab('coding',this)">💻 Coding</button></div>
+<div id="tab-life" class="tab-page active">
   <div class="card accent-green">
     <h2>🌍 Time on Earth — you are alive for</h2>
     <div class="big" id="alive">—</div>
@@ -63,6 +76,18 @@
     <div class="bar"><div id="bar25" style="background:linear-gradient(90deg,#fbbf24,#f97316); width:0%"></div></div>
     <div class="bar-labels"><span id="pct25-used">—</span><span id="pct25-left">—</span></div>
     <p class="sub" id="left25days">—</p>
+  </div>
+
+  </div>
+
+  <div id="tab-coding" class="tab-page">
+    <div class="card accent-green">
+      <h2>💻 Coding — Codolio Profile</h2>
+      <div class="big" style="font-size:20px">zaid.learning</div>
+      <p class="sub">Live connected profile — your DSA, contests &amp; platform stats in one place. If the embed is blocked by Codolio, use the button below.</p>
+    </div>
+    <iframe class="code-frame" src="https://codolio.com/profile/zaid.learning" title="Codolio profile" loading="lazy" referrerpolicy="no-referrer"></iframe>
+    <a class="open-btn" href="https://codolio.com/profile/zaid.learning" target="_blank" rel="noopener">🚀 Open full Codolio profile →</a>
   </div>
 
   <footer>
@@ -121,6 +146,13 @@ function tick() {
     document.getElementById("pct25-left").textContent = (100 - used25).toFixed(1) + "% left";
     document.getElementById("left25days").textContent = "Only " + fmt(left25/864e5) + " days (" + fmt(left25/36e5) + " hours) to become financially free. Every day = " + (100/(left25/864e5)).toFixed(3) + "% of remaining time.";
   }
+}
+function showTab(name, btn) {
+  document.getElementById("tab-life").classList.toggle("active", name === "life");
+  document.getElementById("tab-coding").classList.toggle("active", name === "coding");
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 tick(); setInterval(tick, 1000);
 </script>
